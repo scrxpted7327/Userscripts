@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
-// @namespace    http://tampermonkey.net/
-// @version      1.1
+// @namespace    https://github.com/supercellgamer/Userscripts/tree/main
+// @version      1.2
 // @description  utility mod for coffee shop
 // @author       scrxpted
 // @match        https://www.culinaryschools.org/kids-games/coffee-shop/
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=culinaryschools.org
+// @icon         https://www.novoline.lol/images/image3.png
 // @grant        none
 // @sandbox      raw
 // @updateURL    https://raw.githubusercontent.com/supercellgamer/Userscripts/main/CoffeeShopVersion.dat
