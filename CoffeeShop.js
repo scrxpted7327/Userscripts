@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  utility mod for coffee shop
 // @author       scrxpted
 // @match        https://www.culinaryschools.org/kids-games/coffee-shop/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=culinaryschools.org
 // @grant        none
 // @sandbox      raw
+// @updateURL    
+// @downloadURL  
 // ==/UserScript==
 
 function waitForObjectAndThen(get, check, func) {
