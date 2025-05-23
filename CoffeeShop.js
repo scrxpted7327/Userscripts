@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
 // @namespace    https://github.com/supercellgamer/Userscripts/tree/main
-// @version      1.5
+// @version      1.6
 // @description  utility mod for coffee shop
 // @author       scrxpted
 // @match        https://www.culinaryschools.org/kids-games/coffee-shop/
@@ -74,7 +74,9 @@ function createElement(type, ...args) { // createElement(type, properties, paren
 }
 
 function getUI() {
-    return {
+    var ui;ui = {
+        elements: [],
+        visible: true,
         addCustomLabel: (i) => { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
             let element = createElement('text', { id: i.tag, className: i.tag, style: {
                 position: 'absolute',
@@ -90,7 +92,7 @@ function getUI() {
                 ['font-variant-numeric']: 'tabular-nums lining-nums',
                 ['pointer-events']: 'none'
             }}, gameDocument.getElementById('screen-game'))
-            return {
+            let ret = {
                 Object: element,
                 updateText: (text) => {
                     element.innerHTML = text
@@ -100,8 +102,13 @@ function getUI() {
                 },
                 hide: () => {
                     element.hidden = true
+                },
+                toggle: () => {
+                    element.hidden = !element.hidden
                 }
             }
+            ui.elements.push(ret)
+            return ret
         },
         appendLabel: (i) => { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
             this.offset = this.offset != undefined ? this.offset : 120
@@ -119,7 +126,7 @@ function getUI() {
                 ['text-shadow']: '2px 1px 1px #000',
                 ['font-variant-numeric']: 'tabular-nums lining-nums',
             }}, gameDocument.getElementById('screen-game'))
-            return {
+            let ret = {
                 Object: element,
                 updateText: (text) => {
                     element.innerHTML = text
@@ -129,8 +136,13 @@ function getUI() {
                 },
                 hide: () => {
                     element.hidden = true
+                },
+                toggle: () => {
+                    element.hidden = !element.hidden
                 }
             }
+            ui.elements.push(ret)
+            return ret
         },
         createButton: (i) => { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
             this.offset = this.offset != undefined ? this.offset : 120
@@ -149,7 +161,7 @@ function getUI() {
                 ['font-variant-numeric']: 'tabular-nums lining-nums',
             }}, gameDocument.getElementById('screen-game'))
             element.addEventListener('click', i.callback)
-            return {
+            let ret = {
                 Object: element,
                 updateText: (text) => {
                     element.innerHTML = text
@@ -159,10 +171,16 @@ function getUI() {
                 },
                 hide: () => {
                     element.hidden = true
+                },
+                toggle: () => {
+                    element.hidden = !element.hidden
                 }
             }
+            ui.elements.push(ret)
+            return ret
         },
     }
+    return ui
 }
 
 (function() {
@@ -221,18 +239,18 @@ function getUI() {
             colorHex: '#1fe81a',
             fontSize: 16,
             fontSize2: 32,
-            width: 200,
-            callback: function bypassDay() {
-                dayStatsElement.classList.add('hidden')
-                prepareTabElement.classList.remove('hidden')
-                startDayButton.disabled = false
-                gameDocument.getElementById('screen-game').parentElement.children[0].children.forEach(function(element) {
-                    element.classList.remove('hidden')
-                    element.classList.add('active')
+            width: 20,
+            callback: () => {
+                uiLibrary.visible = !uiLibrary.visible
+                uiLibrary.elements.forEach((uiFrame, _, __) => {
+                    if (uiFrame != bypassDayButton) {
+                        uiFrame.toggle()
+                    }
                 })
+                bypassDayButton.updateText(uiLibrary.visible ? 'hide' : '')
             }
         })
-        bypassDayButton.updateText('funny')
+        bypassDayButton.updateText('hide')
 
 
         // create reputation variables
@@ -352,20 +370,21 @@ function getUI() {
                 demandUI.updateText('Demand: ' + (demand == 1 ? 100 : (demand * 100).toPrecision(4)) + '%')
                 customersUI.updateText(`Customers: ${customerCount}/${Math.floor(demand * 40)}`)
                 reputationIncreaseUI.updateText('Reputation Increase: ' + (predictReputationIncrease(Math.floor(demand * 40)) * 10).toPrecision(4) + '%') //(0.1 * (predictSatifaction() * 1.15)).toPrecision(4)
-                predictedBalanceUI.updateText('Predicted Balance: $' + ((demand * 40 * (price / 100)) > 99 ? Math.round(demand * 40 * (price / 100)) : (demand * 40 * (price / 100)).toPrecision(2)))
+                predictedBalanceUI.updateText('Predicted Balance: $' + ((demand * 40 * (price / 100)) > 9 ? Math.round(demand * 40 * (price / 100)) : (demand * 40 * (price / 100)).toPrecision(2)))
             }
         }
         async function reputationUpdated() {
             //console.log('Reputation: ' + reputation)
-            reputationUI.updateText('Reputation: ' + Math.floor(reputation * 100) + '/100')
+            reputationUI.updateText('Reputation: ' + (reputation == 1 ? 100 : (reputation * 100).toPrecision(4)) + '/100')
             updateDemand()
         }
 
         async function balanceUpdated() {
             //console.log('Balance: $' + balance)
-            if (balance > oldBalance) {
+            if ((priceElement.className == 'serve-price hidden') && (balance > oldBalance)) {
                 customerCount += 1
             }
+            updateDemand()
         }
 
         async function priceUpdated() {
@@ -381,14 +400,14 @@ function getUI() {
         }
 
         async function recipeUpdated() {
-            console.log('recipeUpdated')
+            //console.log('recipeUpdated')
             updateDemand()
         }
 
         var variableUpdaters = {
             reputation: async function() {
                 reputationString = reputationElement.children[0].style.width
-                reputation = parseFloat(reputationString.substring(7, reputationString.length - 3)) / 100
+                reputation = parseFloat(reputationString.substring(0, reputationString.length - 2)) / 100
                 if (oldReputation != reputation) {
                     reputationUpdated()
                     oldReputation = reputation
@@ -420,7 +439,7 @@ function getUI() {
                 }
             },
             weather: async function() {
-                weather = weatherElement.innerText.split(' ')[5]
+                weather = weatherElement.children[0].children[3].innerText
                 if (oldWeather != weather) {
                     weatherUpdated()
                     oldWeather = weather
