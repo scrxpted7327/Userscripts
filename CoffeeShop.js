@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
 // @namespace    https://github.com/supercellgamer/Userscripts/tree/main
-// @version      1.2
+// @version      1.3
 // @description  utility mod for coffee shop
 // @author       scrxpted
 // @match        https://www.culinaryschools.org/kids-games/coffee-shop/
@@ -15,7 +15,7 @@
 function waitForObjectAndThen(get, check, func) {
     var objectListener = setInterval(() => {
         var obj = get()
-        if (check(obj) == true) {
+        if (check(obj) === true) {
             clearInterval(objectListener);
             func()
         }
@@ -23,14 +23,14 @@ function waitForObjectAndThen(get, check, func) {
 }
 
 function onLoad(func) {
-    waitForObjectAndThen(function() {
+    waitForObjectAndThen(() => {
         return document.querySelector('#screen-main')
-    }, function(obj) {
-        return (obj.className != 'show')
-    }, function() {
-        waitForObjectAndThen(function() {
+    }, (obj) => {
+        return obj && obj.className == 'hidden'
+    }, () => {
+        waitForObjectAndThen(() => {
             return document.querySelector('.reputation')
-        }, function(obj) {
+        }, (obj) => {
             if (obj != null) {
                 return obj.innerHTML.split('"')[3] != null
             }
@@ -43,9 +43,9 @@ function createElement (type, ...args) { // createElement(type, properties, pare
     if (type == null || typeof type !== 'string') {
       throw Error('The element type must be a string');
     }
-  
-    if (args[0] !== undefined && Object.prototype.toString.call(args[0]) !== '[object Object]') { 
-      throw Error('The options argument must be an object'); 
+
+    if (args[0] !== undefined && Object.prototype.toString.call(args[0]) !== '[object Object]') {
+      throw Error('The options argument must be an object');
     }
     const { attrs = {}, children = [] } = args[0] || {};
 
@@ -223,8 +223,8 @@ function getUI() {
             }
         })
         bypassDayButton.updateText('funny')
-        
-        
+
+
         // create reputation variables
         const reputationElement = document.querySelector('.reputation')
         var reputationString
@@ -274,7 +274,7 @@ function getUI() {
             oldMilk: 0,
             oldSugar: 0,
         }
-        
+
 
         const ingredientBaseQuality = {
             coffee: {
