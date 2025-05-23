@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
 // @namespace    https://github.com/supercellgamer/Userscripts/tree/main
-// @version      1.4
+// @version      1.5
 // @description  utility mod for coffee shop
 // @author       scrxpted
 // @match        https://www.culinaryschools.org/kids-games/coffee-shop/
@@ -15,22 +15,33 @@
 function waitForObjectAndThen(get, check, func) {
     var objectListener = setInterval(() => {
         var obj = get()
-        if (check(obj) === true) {
+        if (obj && check(obj) === true) {
             clearInterval(objectListener);
             func(obj)
         }
     }, 100)
 }
 
+var gameContainer
+var gameDocument
+
 function onLoad(func) {
     waitForObjectAndThen(() => {
-        return document.querySelector('#screen-main')
+        if (document.body.children[0].contentWindow !== undefined && (gameContainer === undefined || gameDocument === undefined)) {
+            gameContainer = document.body.children[0].contentWindow.document.children[0].children[1].children[0]
+            gameDocument = document.body.children[0].contentWindow.document
+            console.log(gameContainer, gameDocument)
+        } else {
+            return gameContainer && gameContainer.children[0]
+        }
     }, (obj) => {
         return obj && obj.className == 'hidden'
     }, () => {
+        console.log('onLoad (gameContainer)')
         waitForObjectAndThen(() => {
-            return document.querySelector('.reputation')
+            return gameDocument.querySelector('.reputation')
         }, (obj) => {
+            console.log('onLoad (.reputation)')
             return obj && obj.children[0].style.width != null
         }, func)
     })
@@ -64,8 +75,8 @@ function createElement(type, ...args) { // createElement(type, properties, paren
 
 function getUI() {
     return {
-        addCustomLabel: function addCustomLabel(i) { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
-            const element = createElement('text', { id: i.tag, className: i.tag, style: {
+        addCustomLabel: (i) => { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
+            let element = createElement('text', { id: i.tag, className: i.tag, style: {
                 position: 'absolute',
                 left: i.left + 'px',
                 top: i.top + 'px',
@@ -78,24 +89,24 @@ function getUI() {
                 ['text-shadow']: '2px 1px 1px #000',
                 ['font-variant-numeric']: 'tabular-nums lining-nums',
                 ['pointer-events']: 'none'
-            }}, document.getElementById('screen-game'))
+            }}, gameDocument.getElementById('screen-game'))
             return {
                 Object: element,
-                updateText: function updateText(text) {
+                updateText: (text) => {
                     element.innerHTML = text
                 },
-                show: function show() {
+                show: () => {
                     element.hidden = false
                 },
-                hide: function hide() {
+                hide: () => {
                     element.hidden = true
                 }
             }
         },
-        appendLabel: function appendLabel(i) { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
+        appendLabel: (i) => { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
             this.offset = this.offset != undefined ? this.offset : 120
             this.offset += 16
-            const element = createElement('text', { id: i.tag, className: i.tag, style: {
+            let element = createElement('text', { id: i.tag, className: i.tag, style: {
                 position: 'absolute',
                 left: '3px',
                 top: this.offset + 'px',
@@ -107,24 +118,24 @@ function getUI() {
                 ['text-align']: 'left',
                 ['text-shadow']: '2px 1px 1px #000',
                 ['font-variant-numeric']: 'tabular-nums lining-nums',
-            }}, document.getElementById('screen-game'))
+            }}, gameDocument.getElementById('screen-game'))
             return {
                 Object: element,
-                updateText: function updateText(text) {
+                updateText: (text) => {
                     element.innerHTML = text
                 },
-                show: function show() {
+                show: () => {
                     element.hidden = false
                 },
-                hide: function hide() {
+                hide: () => {
                     element.hidden = true
                 }
             }
         },
-        createButton: function createButton(i) { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
+        createButton: (i) => { // {tag: string, left: number, top: number, fontSize: number, fontSize2: number}
             this.offset = this.offset != undefined ? this.offset : 120
             this.offset += 16
-            const element = createElement('button', { id: i.tag, className: i.tag, style: {
+            let element = createElement('button', { id: i.tag, className: i.tag, style: {
                 position: 'absolute',
                 left: '3px',
                 top: this.offset + 'px',
@@ -136,17 +147,17 @@ function getUI() {
                 ['text-align']: 'left',
                 ['text-shadow']: '2px 1px 1px #000',
                 ['font-variant-numeric']: 'tabular-nums lining-nums',
-            }}, document.getElementById('screen-game'))
+            }}, gameDocument.getElementById('screen-game'))
             element.addEventListener('click', i.callback)
             return {
                 Object: element,
-                updateText: function updateText(text) {
+                updateText: (text) => {
                     element.innerHTML = text
                 },
-                show: function show() {
+                show: () => {
                     element.hidden = false
                 },
-                hide: function hide() {
+                hide: () => {
                     element.hidden = true
                 }
             }
@@ -157,11 +168,13 @@ function getUI() {
 (function() {
     'use strict';
 
-    onLoad(function() {
-        const uiLibrary = getUI()
+    onLoad(() => {
+        console.log('onLoad')
+
+        var uiLibrary = getUI()
 
         // init ui
-        const reputationUI = uiLibrary.addCustomLabel({
+        var reputationUI = uiLibrary.addCustomLabel({
             tag: 'reputationUI',
             left: 3,
             top: 412,
@@ -171,28 +184,28 @@ function getUI() {
             width: 200
         })
 
-        const reputationIncreaseUI = uiLibrary.appendLabel({
+        var reputationIncreaseUI = uiLibrary.appendLabel({
             tag: 'reputationIncreaseUI',
             colorHex: '#1fe81a',
             fontSize: 16,
             fontSize2: 32,
             width: 200
         })
-        const predictedBalanceUI = uiLibrary.appendLabel({
+        var predictedBalanceUI = uiLibrary.appendLabel({
             tag: 'predictedBalanceUI',
             colorHex: '#1fe81a',
             fontSize: 16,
             fontSize2: 32,
             width: 200
         })
-        const demandUI = uiLibrary.appendLabel({
+        var demandUI = uiLibrary.appendLabel({
             tag: 'demandUI',
             colorHex: '#1fe81a',
             fontSize: 16,
             fontSize2: 32,
             width: 200
         })
-        const customersUI = uiLibrary.appendLabel({
+        var customersUI = uiLibrary.appendLabel({
             tag: 'customersUI',
             colorHex: '#1fe81a',
             fontSize: 16,
@@ -200,10 +213,10 @@ function getUI() {
             width: 200
         })
 
-        const dayStatsElement = document.getElementById('screen-day-stats')
-        const prepareTabElement = document.getElementById('game-tab-prepare')
-        const startDayButton = document.querySelector("button.start-day")
-        const bypassDayButton = uiLibrary.createButton({
+        var dayStatsElement = gameDocument.getElementById('screen-day-stats')
+        var prepareTabElement = gameDocument.getElementById('game-tab-prepare')
+        var startDayButton = gameDocument.querySelector("button.start-day")
+        var bypassDayButton = uiLibrary.createButton({
             tag: 'bypassDayButton',
             colorHex: '#1fe81a',
             fontSize: 16,
@@ -213,7 +226,7 @@ function getUI() {
                 dayStatsElement.classList.add('hidden')
                 prepareTabElement.classList.remove('hidden')
                 startDayButton.disabled = false
-                $0.parentElement.children[0].children.forEach(function(element) {
+                gameDocument.getElementById('screen-game').parentElement.children[0].children.forEach(function(element) {
                     element.classList.remove('hidden')
                     element.classList.add('active')
                 })
@@ -223,25 +236,25 @@ function getUI() {
 
 
         // create reputation variables
-        const reputationElement = document.querySelector('.reputation')
+        var reputationElement = gameDocument.querySelector('.reputation')
         var reputationString
         var reputation, oldReputation = -1
 
         // create balance variables
-        const balanceElement = document.querySelector('.balance')
+        var balanceElement = gameDocument.querySelector('.balance')
         var balance, oldBalance, previousBalance = -1
 
 
         // create price variables
-        const priceElement = document.querySelector(".serve-price")
-        const priceElementSlider = document.querySelector(".prepare .price .slider")
+        var priceElement = gameDocument.querySelector(".serve-price")
+        var priceElementSlider = gameDocument.querySelector(".prepare .price .slider")
         var price, oldPrice = -1
 
 
         // create weather variables
-        const weatherElement = document.querySelector('.weather.small')
+        var weatherElement = gameDocument.querySelector('.weather.small')
         var weather, oldWeather = 'none'
-        const weatherMap = {
+        var weatherMap = {
             freezing: 1,
             cold: 0.9,
             cool: 0.6,
@@ -258,12 +271,12 @@ function getUI() {
 
 
         // create inventory variables
-        const coffeeElement = document.querySelector('.slider[data-state="recipeCoffee"]')
-        const milkElement = document.querySelector('.slider[data-state="recipeMilk"]')
-        const sugarElement = document.querySelector('.slider[data-state="recipeSugar"]')
+        var coffeeElement = gameDocument.querySelector('.slider[data-state="recipeCoffee"]')
+        var milkElement = gameDocument.querySelector('.slider[data-state="recipeMilk"]')
+        var sugarElement = gameDocument.querySelector('.slider[data-state="recipeSugar"]')
 
 
-        const ingredientQuality = {
+        var ingredientQuality = {
             coffee: 0,
             milk: 0,
             sugar: 0,
@@ -273,7 +286,7 @@ function getUI() {
         }
 
 
-        const ingredientBaseQuality = {
+        var ingredientBaseQuality = {
             coffee: {
                 min: 0,
                 max: 4
@@ -289,7 +302,7 @@ function getUI() {
         }
 
 
-        const inv = {
+        var inv = {
             getIdealRecipe: function getIdealRecipe() {
                 return {
                     coffee: ingredientBaseQuality.coffee.max,
@@ -337,19 +350,22 @@ function getUI() {
                 console.log('Reputation Increase: ' + (0.1 * (predictSatifaction() * 1.15)))
                 console.log('Predicted Balance: $' + demand * 40 * (price / 100))*/
                 demandUI.updateText('Demand: ' + (demand == 1 ? 100 : (demand * 100).toPrecision(4)) + '%')
-                customersUI.updateText('Customers: ' + Math.floor(demand * 40))
+                customersUI.updateText(`Customers: ${customerCount}/${Math.floor(demand * 40)}`)
                 reputationIncreaseUI.updateText('Reputation Increase: ' + (predictReputationIncrease(Math.floor(demand * 40)) * 10).toPrecision(4) + '%') //(0.1 * (predictSatifaction() * 1.15)).toPrecision(4)
                 predictedBalanceUI.updateText('Predicted Balance: $' + ((demand * 40 * (price / 100)) > 99 ? Math.round(demand * 40 * (price / 100)) : (demand * 40 * (price / 100)).toPrecision(2)))
             }
         }
         async function reputationUpdated() {
             //console.log('Reputation: ' + reputation)
-            reputationUI.updateText('Reputation: ' + (reputation * 100).toPrecision(4) + '%')
+            reputationUI.updateText('Reputation: ' + Math.floor(reputation * 100) + '/100')
             updateDemand()
         }
 
         async function balanceUpdated() {
             //console.log('Balance: $' + balance)
+            if (balance > oldBalance) {
+                customerCount += 1
+            }
         }
 
         async function priceUpdated() {
@@ -360,14 +376,16 @@ function getUI() {
         async function weatherUpdated() {
             //console.log('Weather: ' + weather + ' (modifier: ' + weatherMap[weather] + ')')
             previousBalance = balance
+            customerCount = 0
             updateDemand()
         }
 
         async function recipeUpdated() {
+            console.log('recipeUpdated')
             updateDemand()
         }
 
-        const variableUpdaters = {
+        var variableUpdaters = {
             reputation: async function() {
                 reputationString = reputationElement.children[0].style.width
                 reputation = parseFloat(reputationString.substring(7, reputationString.length - 3)) / 100
@@ -409,21 +427,21 @@ function getUI() {
                 }
             },
             recipeCoffee: async function() {
-                ingredientQuality.coffee = coffeeElement.innerText.split('\n')[4]
+                ingredientQuality.coffee = coffeeElement.children[4].innerText
                 if (ingredientQuality.oldCoffee != ingredientQuality.coffee) {
                     recipeUpdated()
                     ingredientQuality.oldCoffee = ingredientQuality.coffee
                 }
             },
             recipeMilk: async function() {
-                ingredientQuality.milk = milkElement.innerText.split('\n')[4]
+                ingredientQuality.milk = milkElement.children[4].innerText
                 if (ingredientQuality.oldMilk != ingredientQuality.milk) {
                     recipeUpdated()
                     ingredientQuality.oldMilk = ingredientQuality.milk
                 }
             },
             recipeSugar: async function() {
-                ingredientQuality.sugar = sugarElement.innerText.split('\n')[4]
+                ingredientQuality.sugar = sugarElement.children[4].innerText
                 if (ingredientQuality.oldSugar != ingredientQuality.sugar) {
                     recipeUpdated()
                     ingredientQuality.oldSugar = ingredientQuality.sugar
@@ -431,10 +449,8 @@ function getUI() {
             }
         }
 
-        for (const [type, bindable] of Object.entries(variableUpdaters)) { // begin catching updates
-            setInterval(() => {
-                bindable()
-            }, 100)
+        for (var [type, bindable] of Object.entries(variableUpdaters)) { // begin catching updates
+            setInterval(bindable, 100)
             bindable() // call an initial update
             console.log(type + ' has been started')
         }
