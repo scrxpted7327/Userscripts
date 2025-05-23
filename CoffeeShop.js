@@ -267,7 +267,7 @@ function getUI() {
 
         // create prediction variables
         var demand = 0
-
+        var customerCount = 0
 
 
         // create inventory variables
