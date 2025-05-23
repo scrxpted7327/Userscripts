@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
 // @namespace    https://github.com/supercellgamer/Userscripts/tree/main
-// @version      1.3
+// @version      1.4
 // @description  utility mod for coffee shop
 // @author       scrxpted
 // @match        https://www.culinaryschools.org/kids-games/coffee-shop/
@@ -17,7 +17,7 @@ function waitForObjectAndThen(get, check, func) {
         var obj = get()
         if (check(obj) === true) {
             clearInterval(objectListener);
-            func()
+            func(obj)
         }
     }, 100)
 }
@@ -31,15 +31,12 @@ function onLoad(func) {
         waitForObjectAndThen(() => {
             return document.querySelector('.reputation')
         }, (obj) => {
-            if (obj != null) {
-                return obj.innerHTML.split('"')[3] != null
-            }
-            return false
+            return obj && obj.children[0].style.width != null
         }, func)
     })
 }
 
-function createElement (type, ...args) { // createElement(type, properties, parent): Node
+function createElement(type, ...args) { // createElement(type, properties, parent): Node
     if (type == null || typeof type !== 'string') {
       throw Error('The element type must be a string');
     }
@@ -47,13 +44,13 @@ function createElement (type, ...args) { // createElement(type, properties, pare
     if (args[0] !== undefined && Object.prototype.toString.call(args[0]) !== '[object Object]') {
       throw Error('The options argument must be an object');
     }
-    const { attrs = {}, children = [] } = args[0] || {};
+    let { attrs = {}, children = [] } = args[0] || {};
 
-    const element = document.createElement(type)
+    let element = document.createElement(type)
 
-    for (const [key, value] of Object.entries(args[0])) {
+    for (let [key, value] of Object.entries(args[0])) {
         if (typeof value == 'object') {
-            for (const [key2, value2] of Object.entries(value)) {
+            for (let [key2, value2] of Object.entries(value)) {
                 element[key][key2] = value2
             }
         } else {
@@ -236,8 +233,8 @@ function getUI() {
 
 
         // create price variables
-        const priceElement = document.querySelector(".prepare .price .slider")
-        const priceElement2 = document.querySelector(".serve-price")
+        const priceElement = document.querySelector(".serve-price")
+        const priceElementSlider = document.querySelector(".prepare .price .slider")
         var price, oldPrice = -1
 
 
@@ -372,7 +369,7 @@ function getUI() {
 
         const variableUpdaters = {
             reputation: async function() {
-                reputationString = reputationElement.innerHTML.split('"')[3]
+                reputationString = reputationElement.children[0].style.width
                 reputation = parseFloat(reputationString.substring(7, reputationString.length - 3)) / 100
                 if (oldReputation != reputation) {
                     reputationUpdated()
@@ -387,8 +384,8 @@ function getUI() {
                 }
             },
             price: async function() {
-                if (priceElement2.className == 'serve-price hidden') {
-                    price = parseFloat(priceElement.innerText.split('$')[3]) * 100
+                if (priceElement.className != 'serve-price hidden') {
+                    price = parseFloat(priceElement.children[0].children[2].outerText.split('$')[1]) * 100
                     if (oldPrice != price) {
                         priceUpdated()
                         oldPrice = price
@@ -396,8 +393,8 @@ function getUI() {
                 }
             },
             price2: async function() {
-                if (priceElement2.className != 'serve-price hidden') {
-                    price = parseFloat(priceElement2.innerText.split('$')[4]) * 100
+                if (priceElement.className == 'serve-price hidden') {
+                    price = parseFloat(priceElementSlider.children[2].outerText.split('$')[1]) * 100
                     if (oldPrice != price) {
                         priceUpdated()
                         oldPrice = price
