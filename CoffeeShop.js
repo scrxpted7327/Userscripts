@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Coffee Shop Mod
-// @namespace    https://github.com/supercellgamer/Userscripts/tree/main
+// @namespace    https://github.com/scrxpted7327/Userscripts/tree/main
 // @version      1.6
 // @description  utility mod for coffee shop
 // @author       scrxpted
@@ -8,8 +8,8 @@
 // @icon         https://www.novoline.lol/images/image3.png
 // @grant        none
 // @sandbox      raw
-// @updateURL    https://raw.githubusercontent.com/supercellgamer/Userscripts/main/CoffeeShopVersion.dat
-// @downloadURL  https://raw.githubusercontent.com/supercellgamer/Userscripts/main/CoffeeShop.js
+// @updateURL    https://raw.githubusercontent.com/scrxpted7327/Userscripts/main/CoffeeShopVersion.dat
+// @downloadURL  https://raw.githubusercontent.com/scrxpted7327/Userscripts/main/CoffeeShop.js
 // ==/UserScript==
 
 function waitForObjectAndThen(get, check, func) {
@@ -475,3 +475,4 @@ function getUI() {
         }
     })
 })()
+
