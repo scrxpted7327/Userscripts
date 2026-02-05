@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto-Login: USask, Weblink, Crowdmark & Canvas
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Automates login for cas.usask.ca, weblinkauth, handles crowdmark redirects, and closes Canvas SLEQ popups safely
 // @author       You
 // @updateURL    https://raw.githubusercontent.com/scrxpted7327/Userscripts/main/AutoLogin.dat
